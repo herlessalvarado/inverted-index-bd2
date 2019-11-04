@@ -55,15 +55,21 @@ class InvertedIndex:
 
     def index (self):
         with open('index.json', 'w') as jsonfile:
+            data = {}
             for key in self.words:
-                data = {}
-                data[key] = []
-                data[key].append({
-                    'location' : self.words[key]
-                })
-                json.dump(data,jsonfile)
+                data[key] = self.words[key]
+            json.dump(data,jsonfile)
 
-
+def search(query):
+    text = preprocessing(query)
+    with open('index.json','r') as jsonfile:
+        content = jsonfile.read()
+    data = json.loads (content)
+    #print (list(data.keys()))
+    print (text[0])
+    if text[0] in list(data.keys()):
+        print (text[0], data[text[0]])
+    
 
 
 text = "this is an example of the preprocessing done"
@@ -75,4 +81,5 @@ print("****************")
 inver = InvertedIndex ()
 inver.tokenize ()
 inver.index ()
+search ("caso")
 #inver.printlist ()
