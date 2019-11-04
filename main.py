@@ -16,6 +16,16 @@ def preprocessing(input):
         output.append(ps.stem(w))
     return output
 
+class Tweet:
+    def __init__(self, id_, file_name):
+        self.id = id_
+        self.file = file_name
+
+class Word: 
+    def __init__(self, cant_, id_file_):
+        self.cant = cant_
+        self.idFile =id_file_
+
 class InvertedIndex: 
     def __init__(self):
         self.words = {}
@@ -29,21 +39,28 @@ class InvertedIndex:
                 data = json.load (jsonfile)
                 ind = 0
                 for TweetText in data:
+                    newTweet = Tweet (TweetText ['id'], file)
+                    print (newTweet.__dict__)
                     word_tokens = word_tokenize (TweetText ['text'])
                     filtered_sentence = [w for w in word_tokens if not w in stop_words]
                     for word in filtered_sentence:
                         word = ps.stem (word)
                         if not (word in self.words):
                             self.words [word] = {}
-                        if (file + str (ind)) in self.words [word]:
-                            self.words [word] [file + str (ind)] += 1
+                        if file in list(self.words [word].keys()):
+                            tempWord = Word (self.words [word] [file] ['cant'], self.words [word] [file] ['idFile'])
+                            tempWord.cant += 1
+                            self.words [word] [file] = tempWord.__dict__
                         else:
-                            self.words [word] [file + str (ind)] = 1
+                            newWord = Word (1, newTweet.id)
+                            self.words [word] [file] = newWord.__dict__
 
                     ind += 1
             self.numtweets += ind
             num += 1
             print ("listo\n")
+            if (num > 5):
+                break
         self.filesnum = num
 
     def printlist (self):
@@ -51,7 +68,7 @@ class InvertedIndex:
             print (key, " : ", self.words[key])
         print ("Hay " + str(len (self.words)) + " palabras")
         print ("Hay " + str(self.numtweets) + " tweets")
-        print ("Hay " + str(self.filesnum) + " tweets")
+        print ("Hay " + str(self.filesnum) + " files")
 
 
 
@@ -64,4 +81,6 @@ print("****************")
 
 inver = InvertedIndex ()
 inver.tokenize ()
+
+print ("****************")
 inver.printlist ()
