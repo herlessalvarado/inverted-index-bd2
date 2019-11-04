@@ -53,6 +53,16 @@ class InvertedIndex:
         print ("Hay " + str(self.numtweets) + " tweets")
         print ("Hay " + str(self.filesnum) + " tweets")
 
+    def index (self):
+        with open('index.json', 'w') as jsonfile:
+            for key in self.words:
+                data = {}
+                data[key] = []
+                data[key].append({
+                    'location' : self.words[key]
+                })
+                json.dump(data,jsonfile)
+
 
 
 
@@ -64,4 +74,5 @@ print("****************")
 
 inver = InvertedIndex ()
 inver.tokenize ()
-inver.printlist ()
+inver.index ()
+#inver.printlist ()
