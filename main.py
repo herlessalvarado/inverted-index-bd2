@@ -65,12 +65,9 @@ def search(query):
     with open('index.json','r') as jsonfile:
         content = jsonfile.read()
     data = json.loads (content)
-    #print (list(data.keys()))
-    print (text[0])
-    if text[0] in list(data.keys()):
-        print (text[0], data[text[0]])
-    
-
+    for word in text:
+        if word in list(data.keys()):
+            print (word, data[word])
 
 text = "this is an example of the preprocessing done"
 
@@ -81,5 +78,5 @@ print("****************")
 inver = InvertedIndex ()
 inver.tokenize ()
 inver.index ()
-search ("caso")
+search ("caso bueno")
 #inver.printlist ()
