@@ -7,11 +7,15 @@ import os
 import math
 import operator
 
-NUM_FILES = 3
+#Usamos estas variables para poder hacer split con todos los files
+NUM_FILES = 4
+IDFROMII = 0
+START = 1 + ((NUM_FILES) * IDFROMII)
 
 stop_words = set(stopwords.words('spanish')) 
 ps = PorterStemmer()
 
+#Se hace el preprocesamiento del input, devuelve una lista con las palabras filtradas y pasaron por steming
 def preprocessing(input):
     word_tokens = word_tokenize(input)
     filtered_sentence = [w for w in word_tokens if not w in stop_words]
@@ -20,39 +24,51 @@ def preprocessing(input):
         output.append(ps.stem(w))
     return output
 
+#Usamos esta función para hallar el tf para un tweet y un término
 def func_tf(tf):
     return (math.log(1+tf,10))
 
+#Función para hallar idf
 def func_idf (N,df):
     return math.log(N/df,10)
 
+#Clase tweet con la que ubicamos el nombre del archivo donde se encuentra el Tweet y el id de este
 class Tweet:
     def __init__(self, id_, file_name):
         self.id = id_
         self.file = file_name
 
+#Nos sirve para agregar las palabras al inverted index, aca tambien incluimos la posicion del tweet en el archivo
 class Word: 
     def __init__(self, cant_, id_file_):
         self.cant = cant_
-        self.idFile =id_file_
+        self.idFile =id_file_ #Nombre del archivo
         self.ind = 0
 
+#Clase general del inverted index, words equivale al diccionario con todas las palabras.
 class InvertedIndex: 
     def __init__(self):
+        #Diccionario de words, cantidad de tweets y cantidad de files
         self.words = {}
         self.numtweets = 0
         self.filesnum = 0
 
+    #Esta funcion recorre los archivos, luego los tweets en este y luego las palabras para poder llenar nuestro diccionario
+    
     def tokenize (self):
         num = 0
+        idfromfile = 0
         for file in os.listdir (os.getcwd () + '/parse'):
+            idfromfile += 1
+            #Aqui nos aseguramos que empezaremos a contar con el siguiente archivo
+            if (idfromfile < NUM_FILES):
+                continue
             with open ('parse/' + file) as jsonfile:
                 data = json.load (jsonfile)
                 ind = 0
                 for TweetText in data:
                     newTweet = Tweet (TweetText ['id'], file)
                     idfromfile = newTweet.id
-                    #print (newTweet.__dict__)
                     word_tokens = word_tokenize (TweetText ['text'])
                     filtered_sentence = [w for w in word_tokens if not w in stop_words]
                     for word in filtered_sentence:
@@ -72,11 +88,12 @@ class InvertedIndex:
                     ind += 1
             self.numtweets += ind
             num += 1
-            print ("listo\n")
+            #Salimos cuando hayamos recorrido 4 archivos
             if (num > 3):
                 break
         self.filesnum = num
 
+    #Print del diccionario e información sobre este
     def printlist (self):
         for key in self.words:
             print (key, " : ", self.words[key])
@@ -84,13 +101,16 @@ class InvertedIndex:
         print ("Hay " + str(self.numtweets) + " tweets")
         print ("Hay " + str(self.filesnum) + " files")
 
+    #Guarda el diccionario en un .json
     def index (self):
-        with open('index.json', 'w') as jsonfile:
+        with open('index' + str(IDFROMII) + '.json', 'w') as jsonfile:
             data = {}
             for key in self.words:
                 data[key] = self.words[key]
             json.dump(data,jsonfile)
 
+#Pasa una query por el prepocesamiento y usando tf-idf coseno, se imprimen los 10 mejores resultados y se muestran
+#la cantidad de resultados totales
 def search(query):
     query_tfidf = {}
     docs_cosine = {}
@@ -99,7 +119,8 @@ def search(query):
     di2 = {}
     dataTweets = {}
     text = preprocessing(query)
-    with open('index.json','r') as jsonfile:
+    #SI SE QUIERE CAMBIAR EL .json SE CAMBIA AQUI EL NOMBRE, EN ESTE CASO ESTAMOS TRABAJANDO CON index.json
+    with open('index'  +  '.json','r') as jsonfile:
         content = jsonfile.read()
     data = json.loads (content)
     for word in text:
@@ -134,7 +155,6 @@ def search(query):
         
         
     resultado = sorted(docs_cosine.items(), key = operator.itemgetter(1), reverse=True)
-    #print (docs_cosine)
     max = 1
     for key in resultado:
         print ("\n",max, " result:\n" )
@@ -145,15 +165,12 @@ def search(query):
 
     print (len(docs_cosine))
 
-            #for key in data [word]:
-             #   printTweet (key, data[word] [key] ['idFile'], data [word] [key] ['ind'])
 
+#Imprime la información de un tweet, necesitamos el nombre del archivo, el id y el index
 def printTweet (file, id, index):
     with open ('parse/' + file, 'r') as jsonfile:
         content = jsonfile.read ()
     data = json.loads (content)
-    print (data [index]['id'])
-    print (id)
     if (str(data [index]['id']) == str(id) ):
         for key in data [index]:
             print (key, " : ", data [index] [key])
@@ -162,18 +179,22 @@ def printTweet (file, id, index):
         print("error")
         print(data [index] ['id'], id, index)
 
+#Esta parte comentada es usada para crear los json de los indices invertidos, se crean 14 json.
+"""
+for i in range (0, 14):
+    IDFROMII = i
+    print("****************")
 
-print("****************")
+    inver = InvertedIndex ()
+    inver.tokenize ()
+    inver.index ()
 
-inver = InvertedIndex ()
-#inver.tokenize ()
-
-print ("****************")
+    print ("****************")"""
 #inver.printlist ()
 
-#inver.index ()
 
+#bucle para hacer consultas
 while (True):
-    tosearch = input ("Search :...  ")
+    tosearch = input ("Search ...:  ")
     search (tosearch)
 #inver.printlist ()
