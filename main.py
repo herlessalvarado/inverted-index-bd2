@@ -25,6 +25,7 @@ class Word:
     def __init__(self, cant_, id_file_):
         self.cant = cant_
         self.idFile =id_file_
+        self.ind = 0
 
 class InvertedIndex: 
     def __init__(self):
@@ -40,7 +41,7 @@ class InvertedIndex:
                 ind = 0
                 for TweetText in data:
                     newTweet = Tweet (TweetText ['id'], file)
-                    print (newTweet.__dict__)
+                    #print (newTweet.__dict__)
                     word_tokens = word_tokenize (TweetText ['text'])
                     filtered_sentence = [w for w in word_tokens if not w in stop_words]
                     for word in filtered_sentence:
@@ -49,17 +50,19 @@ class InvertedIndex:
                             self.words [word] = {}
                         if file in list(self.words [word].keys()):
                             tempWord = Word (self.words [word] [file] ['cant'], self.words [word] [file] ['idFile'])
+                            tempWord.ind = self.words [word] [file] ['ind']
                             tempWord.cant += 1
                             self.words [word] [file] = tempWord.__dict__
                         else:
                             newWord = Word (1, newTweet.id)
+                            newWord.ind = ind
                             self.words [word] [file] = newWord.__dict__
 
                     ind += 1
             self.numtweets += ind
             num += 1
             print ("listo\n")
-            if (num > 5):
+            if (num > 2):
                 break
         self.filesnum = num
 
@@ -84,7 +87,23 @@ def search(query):
     data = json.loads (content)
     for word in text:
         if word in list(data.keys()):
-            print (word, data[word])
+            print (word, "Files : \n")
+            for key in data [word]:
+                printTweet (key, data[word] [key] ['idFile'], data [word] [key] ['ind'])
+
+def printTweet (file, id, index):
+    with open ('parse/' + file, 'r') as jsonfile:
+        content = jsonfile.read ()
+    data = json.loads (content)
+    if (data [index]['id'] == id ):
+        for key in data [index]:
+            print (key, " : ", data [index] [key])
+        print ("---------")
+    else:
+        print(data [index] ['id'], id, index)
+
+
+
 
 text = "this is an example of the preprocessing done"
 
@@ -93,11 +112,11 @@ test = preprocessing(text)
 print("****************")
 
 inver = InvertedIndex ()
-inver.tokenize ()
+#inver.tokenize ()
 
 print ("****************")
-inver.printlist ()
-=======
-inver.index ()
+#inver.printlist ()
+
+#inver.index ()
 search ("caso bueno")
 #inver.printlist ()
